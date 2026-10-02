@@ -1,0 +1,37 @@
+# Flutter / Dart
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.iml
+.idea/
+.vscode/
+
+# Android
+android/.gradle/
+android/local.properties
+android/app/debug
+android/app/profile
+android/app/release
+*.keystore
+*.jks
+key.properties
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+
+# Python (offline pipeline)
+tools/.venv/
+tools/**/__pycache__/
+__pycache__/
+*.pyc
+tools/out/
+
+# OS / misc
+.DS_Store
+Thumbs.db
+*.log
