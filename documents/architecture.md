@@ -49,7 +49,7 @@ flowchart TD
 meowzart/
 ├─ assets/
 │  ├─ audio/
-│  │  ├─ meows/            meow_low.ogg, meow_mid.ogg, meow_high.ogg
+│  │  ├─ meows/            meow_{low,lowMid,mid,midHigh,high}.wav + the raw takes
 │  │  ├─ songs/            spring.ogg, canon.ogg, ode.ogg
 │  │  └─ sfx/              ui_tap.ogg, star.ogg
 │  ├─ charts/
@@ -139,7 +139,7 @@ Note object:
 |---|---|
 | `t` | Seconds from the audio start when the note should be hit |
 | `lane` | 0-3 |
-| `sample` | Which meow sample to play: `low`, `mid`, `high` |
+| `sample` | Which meow sample to play: `low`, `lowMid`, `mid`, `midHigh`, `high` |
 | `shift` | Semitone shift applied to the sample (−5..+5) |
 
 Chart-level fields: `audio_offset_ms` is a device/song sync correction applied once in `SongClock`; `transpose` is informational (the backing was already rendered transposed, so the app does nothing with it).
@@ -159,7 +159,7 @@ Chart-level fields: `audio_offset_ms` is a device/song sync correction applied o
 class NoteData {
   final double t;       // seconds
   final int lane;       // 0..3
-  final MeowSample sample; // low, mid, high
+  final MeowSample sample; // low, lowMid, mid, midHigh, high
   final int shift;      // semitones
   bool hit = false;     // runtime state, kept in game not in JSON
 }
@@ -264,13 +264,14 @@ HUD is best built as Flutter **overlays** (`GameWidget.overlayBuilderMap`) readi
 ```dart
 class AudioService {
   final _so = SoLoud.instance;
-  late AudioSource _meowLow, _meowMid, _meowHigh;
+  final _meows = <MeowSample, AudioSource>{};   // low, lowMid, mid, midHigh, high
   AudioSource? _song; SoundHandle? _songHandle;
 
   Future<void> init() async {
     await _so.init();
-    _meowLow  = await _so.loadAsset('assets/audio/meows/meow_low.ogg');
-    // ... mid, high
+    for (final s in MeowSample.values) {
+      _meows[s] = await _so.loadAsset('assets/audio/meows/meow_${s.name}.wav');
+    }
   }
 
   Future<void> startSong(String asset, double volume) async {
@@ -282,7 +283,7 @@ class AudioService {
       _so.getPosition(_songHandle!).inMicroseconds / 1e6;
 
   Future<void> playMeow(MeowSample s, int shift, {double volume = 1}) async {
-    final src = switch (s) { MeowSample.low => _meowLow, MeowSample.mid => _meowMid, _ => _meowHigh };
+    final src = _meows[s]!;
     final h = await _so.play(src, volume: volume);
     _so.setRelativePlaySpeed(h, pow(2, shift / 12).toDouble());
   }

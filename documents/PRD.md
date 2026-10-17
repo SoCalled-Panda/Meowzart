@@ -145,7 +145,7 @@ Optional extras: Für Elise, Gymnopédie No. 1, traditional folk songs.
 
 ## 9. Audio requirements
 
-- Meow samples: 3 CC0/self-recorded meows (low, mid, high), mono, 44.1 kHz, trimmed with no leading silence.
+- Meow samples: 5 ElevenLabs-generated takes (low, lowMid, mid, midHigh, high), mono 48 kHz WAV one-shots (0.45 s, trimmed, −1 dBFS) with the MP3 takes as SoLoud fallback — see `assets/LICENSES.md`.
 - Pitch shift via playback speed within ±5 semitones of the sample root.
 - Backing track: rendered offline from MIDI (fluidsynth + permissive sound font), exported as OGG, mixed at about 30% of meow volume.
 - Sync accuracy target: **under 30 ms drift** across a 3-minute song.
@@ -190,7 +190,7 @@ Optional extras: Für Elise, Gymnopédie No. 1, traditional folk songs.
 ## 14. Decisions (resolved — was "open questions")
 
 - **Name:** Meowzart.
-- **Meows per cat:** same 3 samples for all cats in MVP; per-cat samples are P2.
+- **Meows per cat:** same 5 samples for all cats in MVP; per-cat samples are P2.
 - **Hard difficulty:** P1, after the MVP ships.
 - **Stray-tap penalty:** off, permanently (cozy).
 - **Calibration:** manual ±ms slider in P0; tap-to-calibrate screen is P1.

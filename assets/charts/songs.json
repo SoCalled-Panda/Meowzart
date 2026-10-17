@@ -1,0 +1,26 @@
+[
+  {
+    "id": "summer",
+    "file": "summer.json",
+    "title": "Summer (Presto)",
+    "composer": "Antonio Vivaldi",
+    "cover": "cover_summer.jpg",
+    "background": ""
+  },
+  {
+    "id": "ode",
+    "file": "ode.json",
+    "title": "Ode to Joy",
+    "composer": "Ludwig van Beethoven",
+    "cover": "notes_motif.png",
+    "background": ""
+  },
+  {
+    "id": "canon",
+    "file": "canon.json",
+    "title": "Canon in D",
+    "composer": "Johann Pachelbel",
+    "cover": "cover_canon.jpg",
+    "background": ""
+  }
+]

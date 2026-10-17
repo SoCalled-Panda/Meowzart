@@ -111,10 +111,11 @@ DIFFICULTIES = {          # min gap between playable notes, ms
     "hard":   120,
 }
 NUM_LANES = 4
-SAMPLE_ROOTS = {"low": 57, "mid": 64, "high": 71}   # MEASURED MIDI pitch of each meow (see §12)
+SAMPLE_ROOTS = {"low": 54, "lowMid": 55, "mid": 63, "midHigh": 64, "high": 70}   # MEASURED MIDI pitch of each meow (see §12)
 MAX_SHIFT = 5                                        # semitones
-# Coverage window: with roots 57/64/71 and ±5, every pitch in 52..76 can be played in key.
-# Anything outside needs a transposition (fit_transposition) or a 4th sample.
+# Coverage window: the five roots' ±5 windows (49..59, 50..60, 58..68, 59..69,
+# 65..75) overlap into one contiguous band, so every pitch in 49..75 can be
+# played in key. Anything outside needs a transposition (fit_transposition).
 
 def load_melody(path, track_index=None):
     """Returns (midi, melody_instrument, notes_sorted_by_time)."""
@@ -248,7 +249,7 @@ if __name__ == "__main__":
 - **Nearest-root, no octave folding**: folding by pitch class makes a note and the same note an octave up produce the identical meow, which flattens the melody's register and puts meows out of place against the backing. Instead each note uses the sample closest in *absolute* pitch, and the whole song is transposed (`fit_transposition`) until it fits the samples' ±5-semitone coverage window. The key changes slightly; the melody keeps its shape and stays in key with the accompaniment.
 - The mapping to lanes is *melodic contour*, so high notes appear on the right-hand lanes and low on the left, which feels intuitive.
 
-**On `transpose`:** a healthy value is 0 or ±1..4. If `fit_transposition` returns |T| > 7, do not ship it — it means either `SAMPLE_ROOTS` are wrong (a real cat meow usually sits around MIDI 70-85, much higher than the 57/64/71 placeholder) or the melody is wider than 3 samples can cover. Re-measure the roots first; if the melody really is >24 semitones wide, add a 4th sample or pick a different arrangement.
+**On `transpose`:** a healthy value is 0 or ±1..4. A large |T| is *not* automatically a bug — Vivaldi's Summer melody spans 46 semitones, nearly twice the 27-semitone coverage, so Vivaldi's own piece ships here at T = −8 with 100 of 868 melody notes folded by a whole octave (folding preserves pitch class and key; clamping the shift at ±5 instead would sound a wrong interval). What |T| *does* tell you: if it is large **and** the melody is narrow, re-measure `SAMPLE_ROOTS` (§12) before doing anything else. `validate_chart.py` warns only when the fit saturates at the ±12 search limit, which means no transposition works at all and you need a 4th sample or a different arrangement.
 
 ### Improvements (optional, after the MVP works)
 
@@ -306,7 +307,7 @@ print("OK" if ok else "FAILED")
 sys.exit(0 if ok else 1)
 ```
 
-A healthy chart uses all 3 samples, has shifts clustered around 0 (few at ±5), and shows no lane with 0 notes or >50% of notes.
+A healthy chart uses all 5 samples, has shifts clustered around 0 (few at ±5), and shows no lane with 0 notes or >50% of notes.
 
 Target densities (notes per second, averaged): **Easy 1.0-2.0, Normal 2.0-3.5, Hard 3.5-5.0**. Above ~6 on a phone is punishing.
 
@@ -352,9 +353,10 @@ cp out/canon.ogg   ../assets/audio/songs/
 
 - Play each meow at a reference pitch in a DAW (Audacity) or Python `librosa.pyin` to estimate its fundamental, then set `SAMPLE_ROOTS` to the nearest MIDI number. Cat meows are glides, not pure tones, so pick by ear.
 - **The roots describe what the recording actually sounds like — never move them to fit a song.** If a root is wrong, every meow is out of key with the backing track. Adaptation is the pipeline's job (`fit_transposition`), not the roots'.
-- Three roots a fifth apart give a coverage window of `root_min−5 .. root_max+5`. With roots 57/64/71 that is 52..76 (25 semitones). **Measure before trusting these numbers** — cats typically meow around MIDI 70-85, so your real roots are probably higher, which also means less transposition is needed.
-- `validate_chart.py` prints `transpose`; treat |T| > 7 as a bug in the roots, not a normal result.
-- Gaps between neighbouring roots must stay ≤ 10 semitones or a hole opens where no sample can reach.
+- **Measure the file the game plays, not just the raw take**, and take the *median over the loud frames* rather than one frame. A meow's attack can momentarily show only its even harmonics and read a whole octave high (`high.mp3` does exactly that on its first frame: 857 Hz for one frame, ~460 Hz for the rest) — one frame is not a measurement. `tools/pipeline/measure_meows.py` does this and prints the p10..p90 spread in semitones, so you can see when a file is too wobbly to trust.
+- **A meow is a glide, so a root is only good to about ±1 semitone.** Measured here (186.8 / 197.5 / 313.7 / 324.3 / 457.2 Hz over the loud frames, spreads 0.6–1.7 st): `low = 54, lowMid = 55, mid = 63, midHigh = 64, high = 70`. That does not need to be better: the lane plays the sample pitch-shifted per note, so the note's *target* pitch dominates what the player hears.
+- The measured roots give a coverage window of `root_min−5 .. root_max+5` = **49..75** (27 semitones), with no holes because neighbouring windows overlap. Coverage width is set by `root_max − root_min + 2*MAX_SHIFT`, so roots spread wider give *more* range, not less — but any gap > 10 semitones between neighbouring roots opens a hole where no sample can reach.
+- `validate_chart.py` prints `transpose`; a large value is expected for a wide melody (see §10) and only warns if the fit saturates at the ±12 search limit.
 - Keep samples short (150-400 ms) so quick passages don't turn into mush.
 
 ## 13. Pop songs: not for the MVP
